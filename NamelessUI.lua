@@ -1,5 +1,6 @@
 -- ============================================================
 -- NAMELESS UI LIBRARY V2 (PREMIUM & ANIMATED)
+-- COMPLETE SOURCE CODE
 -- ============================================================
 local NamelessUI = {}
 
@@ -34,12 +35,15 @@ local function Animate(obj, prop, time)
     TweenService:Create(obj, TweenInfo.new(time or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), prop):Play()
 end
 
+-- ==========================================
+-- CRIAR JANELA PRINCIPAL
+-- ==========================================
 function NamelessUI:CreateWindow(titleText, subtitleText)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Nameless_Hub"
     ScreenGui.ResetOnSpawn = false
     
-    -- Se já existe um, deleta para evitar duplicatas
+    -- Se já existe um, deleta para evitar duplicatas na tela
     local oldGui = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("Nameless_Hub")
     if oldGui then oldGui:Destroy() end
     ScreenGui.Parent = Players.LocalPlayer.PlayerGui
@@ -202,7 +206,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             Btn.Font = Enum.Font.GothamBold
             Btn.TextSize = 12
             ApplyCorner(Btn, 6)
-            local stroke = ApplyStroke(Btn, T_ACCENT, 1, 0.5)
+            ApplyStroke(Btn, T_ACCENT, 1, 0.5)
 
             Btn.MouseEnter:Connect(function() Animate(Btn, {BackgroundColor3 = T_ACCENT_HOVER}) end)
             Btn.MouseLeave:Connect(function() Animate(Btn, {BackgroundColor3 = T_BG}) end)
@@ -297,19 +301,14 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
 
             Btn.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                    updateSlider(input)
+                    dragging = true; updateSlider(input)
                 end
             end)
             Btn.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
             end)
             UserInputService.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    updateSlider(input)
-                end
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateSlider(input) end
             end)
         end
 
@@ -336,7 +335,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             InputBox.BackgroundColor3 = T_CARD
             InputBox.Text = ""
             InputBox.PlaceholderText = placeholder or "Enter text..."
-            InputBox.TextColor3 = T_ACCENT_LIGHT
+            InputBox.TextColor3 = T_ACCENT_HOVER
             InputBox.Font = Enum.Font.GothamBold
             InputBox.TextSize = 11
             ApplyCorner(InputBox, 4)
@@ -347,6 +346,9 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             end)
         end
 
+        -- ==========================================
+        -- DROPDOWN SIMPLES (Seleção Única)
+        -- ==========================================
         function Elements:AddDropdown(text, options, callback)
             local DropFrame = Instance.new("Frame", Page)
             DropFrame.Size = UDim2.new(1, 0, 0, 34)
@@ -377,7 +379,8 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             local isOpen = false
             MainBtn.MouseButton1Click:Connect(function()
                 isOpen = not isOpen
-                local targetSize = isOpen and UDim2.new(1, 0, 0, 34 + (#options * 26)) or UDim2.new(1, 0, 0, 34)
+                local maxVisibleItems = math.min(#options, 5) 
+                local targetSize = isOpen and UDim2.new(1, 0, 0, 34 + (maxVisibleItems * 26)) or UDim2.new(1, 0, 0, 34)
                 if isOpen then DropContainer.CanvasSize = UDim2.new(0,0,0,DropList.AbsoluteContentSize.Y) end
                 Animate(DropFrame, {Size = targetSize}, 0.2)
             end)
@@ -397,6 +400,83 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
                     isOpen = false
                     Animate(DropFrame, {Size = UDim2.new(1, 0, 0, 34)}, 0.2)
                     pcall(callback, opt)
+                end)
+            end
+        end
+
+        -- ==========================================
+        -- MULTI-SELECT DROPDOWN (Seleção Múltipla)
+        -- ==========================================
+        function Elements:AddMultiDropdown(text, options, callback)
+            local DropFrame = Instance.new("Frame", Page)
+            DropFrame.Size = UDim2.new(1, 0, 0, 34)
+            DropFrame.BackgroundColor3 = T_BG
+            DropFrame.ClipsDescendants = true
+            ApplyCorner(DropFrame, 6)
+            ApplyStroke(DropFrame, T_ACCENT, 1, 0.8)
+
+            local MainBtn = Instance.new("TextButton", DropFrame)
+            MainBtn.Size = UDim2.new(1, 0, 0, 34)
+            MainBtn.BackgroundTransparency = 1
+            MainBtn.Text = "  " .. text .. " : Select ▼"
+            MainBtn.TextColor3 = C_TEXT
+            MainBtn.Font = Enum.Font.GothamSemibold
+            MainBtn.TextSize = 12
+            MainBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+            local DropContainer = Instance.new("ScrollingFrame", DropFrame)
+            DropContainer.Size = UDim2.new(1, -20, 1, -40)
+            DropContainer.Position = UDim2.new(0, 10, 0, 35)
+            DropContainer.BackgroundTransparency = 1
+            DropContainer.ScrollBarThickness = 2
+            DropContainer.ScrollBarImageColor3 = T_ACCENT
+            
+            local DropList = Instance.new("UIListLayout", DropContainer)
+            DropList.Padding = UDim.new(0, 4)
+
+            local isOpen = false
+            MainBtn.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                local maxVisibleItems = math.min(#options, 5) 
+                local targetHeight = 34 + (maxVisibleItems * 26)
+                local targetSize = isOpen and UDim2.new(1, 0, 0, targetHeight) or UDim2.new(1, 0, 0, 34)
+                if isOpen then DropContainer.CanvasSize = UDim2.new(0,0,0,DropList.AbsoluteContentSize.Y) end
+                Animate(DropFrame, {Size = targetSize}, 0.2)
+            end)
+
+            local selectedItems = {}
+
+            for _, opt in ipairs(options) do
+                local OptBtn = Instance.new("TextButton", DropContainer)
+                OptBtn.Size = UDim2.new(1, -8, 0, 22)
+                OptBtn.BackgroundColor3 = T_CARD
+                OptBtn.Text = opt
+                OptBtn.TextColor3 = C_MUTED
+                OptBtn.Font = Enum.Font.GothamSemibold
+                OptBtn.TextSize = 11
+                ApplyCorner(OptBtn, 4)
+
+                local isSelected = false
+                OptBtn.MouseButton1Click:Connect(function()
+                    isSelected = not isSelected
+                    
+                    if isSelected then
+                        table.insert(selectedItems, opt)
+                        Animate(OptBtn, {BackgroundColor3 = T_ACCENT})
+                        Animate(OptBtn, {TextColor3 = C_TEXT})
+                    else
+                        for i, v in ipairs(selectedItems) do
+                            if v == opt then table.remove(selectedItems, i) break end
+                        end
+                        Animate(OptBtn, {BackgroundColor3 = T_CARD})
+                        Animate(OptBtn, {TextColor3 = C_MUTED})
+                    end
+
+                    if #selectedItems == 0 then MainBtn.Text = "  " .. text .. " : Select ▼"
+                    elseif #selectedItems == 1 then MainBtn.Text = "  " .. text .. " : " .. selectedItems[1]
+                    else MainBtn.Text = "  " .. text .. " : " .. tostring(#selectedItems) .. " Selected" end
+
+                    pcall(callback, selectedItems)
                 end)
             end
         end
