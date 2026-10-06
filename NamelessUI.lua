@@ -1,6 +1,5 @@
 -- ============================================================
--- NAMELESS UI LIBRARY V2 (PREMIUM & ANIMATED)
--- COMPLETE SOURCE CODE
+-- NAMELESS UI LIBRARY V2 (PREMIUM, ANIMATED & BYPASS)
 -- ============================================================
 local NamelessUI = {}
 
@@ -35,6 +34,17 @@ local function Animate(obj, prop, time)
     TweenService:Create(obj, TweenInfo.new(time or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), prop):Play()
 end
 
+-- Sistema Anti-Bloqueio ultra seguro para Executores
+local function GetSafeParent()
+    local success, hui = pcall(function() return gethui() end)
+    if success and hui then return hui end
+    
+    local success2, core = pcall(function() return game:GetService("CoreGui") end)
+    if success2 and core then return core end
+    
+    return Players.LocalPlayer:WaitForChild("PlayerGui")
+end
+
 -- ==========================================
 -- CRIAR JANELA PRINCIPAL
 -- ==========================================
@@ -43,13 +53,14 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
     ScreenGui.Name = "Nameless_Hub"
     ScreenGui.ResetOnSpawn = false
     
-    -- Se já existe um, deleta para evitar duplicatas na tela
-    local oldGui = Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("Nameless_Hub")
-    if oldGui then oldGui:Destroy() end
-    ScreenGui.Parent = Players.LocalPlayer.PlayerGui
+    local targetParent = GetSafeParent()
 
-    -- Frame Principal
-    local MainFrame = Instance.new("Frame", ScreenGui)
+    -- Se já existe um, deleta para evitar duplicatas na tela
+    local oldGui = targetParent:FindFirstChild("Nameless_Hub")
+    if oldGui then oldGui:Destroy() end
+    
+    -- Criando UI fora da tela primeiro
+    local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 550, 0, 380)
     MainFrame.Position = UDim2.new(0.5, -275, 0.5, -190)
     MainFrame.BackgroundColor3 = T_BG
@@ -126,6 +137,10 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
+
+    -- Montando as partes e parentando
+    MainFrame.Parent = ScreenGui
+    ScreenGui.Parent = targetParent
 
     local Window = {CurrentTab = nil}
     local isFirstTab = true
@@ -206,7 +221,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             Btn.Font = Enum.Font.GothamBold
             Btn.TextSize = 12
             ApplyCorner(Btn, 6)
-            ApplyStroke(Btn, T_ACCENT, 1, 0.5)
+            local stroke = ApplyStroke(Btn, T_ACCENT, 1, 0.5)
 
             Btn.MouseEnter:Connect(function() Animate(Btn, {BackgroundColor3 = T_ACCENT_HOVER}) end)
             Btn.MouseLeave:Connect(function() Animate(Btn, {BackgroundColor3 = T_BG}) end)
@@ -354,6 +369,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             DropFrame.Size = UDim2.new(1, 0, 0, 34)
             DropFrame.BackgroundColor3 = T_BG
             DropFrame.ClipsDescendants = true
+            DropFrame.ZIndex = 5
             ApplyCorner(DropFrame, 6)
             ApplyStroke(DropFrame, T_ACCENT, 1, 0.8)
 
@@ -365,6 +381,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             MainBtn.Font = Enum.Font.GothamSemibold
             MainBtn.TextSize = 12
             MainBtn.TextXAlignment = Enum.TextXAlignment.Left
+            MainBtn.ZIndex = 6
 
             local DropContainer = Instance.new("ScrollingFrame", DropFrame)
             DropContainer.Size = UDim2.new(1, -20, 1, -40)
@@ -372,6 +389,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             DropContainer.BackgroundTransparency = 1
             DropContainer.ScrollBarThickness = 2
             DropContainer.ScrollBarImageColor3 = T_ACCENT
+            DropContainer.ZIndex = 6
             
             local DropList = Instance.new("UIListLayout", DropContainer)
             DropList.Padding = UDim.new(0, 4)
@@ -393,6 +411,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
                 OptBtn.TextColor3 = C_MUTED
                 OptBtn.Font = Enum.Font.GothamSemibold
                 OptBtn.TextSize = 11
+                OptBtn.ZIndex = 7
                 ApplyCorner(OptBtn, 4)
 
                 OptBtn.MouseButton1Click:Connect(function()
@@ -412,6 +431,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             DropFrame.Size = UDim2.new(1, 0, 0, 34)
             DropFrame.BackgroundColor3 = T_BG
             DropFrame.ClipsDescendants = true
+            DropFrame.ZIndex = 5
             ApplyCorner(DropFrame, 6)
             ApplyStroke(DropFrame, T_ACCENT, 1, 0.8)
 
@@ -423,6 +443,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             MainBtn.Font = Enum.Font.GothamSemibold
             MainBtn.TextSize = 12
             MainBtn.TextXAlignment = Enum.TextXAlignment.Left
+            MainBtn.ZIndex = 6
 
             local DropContainer = Instance.new("ScrollingFrame", DropFrame)
             DropContainer.Size = UDim2.new(1, -20, 1, -40)
@@ -430,6 +451,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
             DropContainer.BackgroundTransparency = 1
             DropContainer.ScrollBarThickness = 2
             DropContainer.ScrollBarImageColor3 = T_ACCENT
+            DropContainer.ZIndex = 6
             
             local DropList = Instance.new("UIListLayout", DropContainer)
             DropList.Padding = UDim.new(0, 4)
@@ -454,6 +476,7 @@ function NamelessUI:CreateWindow(titleText, subtitleText)
                 OptBtn.TextColor3 = C_MUTED
                 OptBtn.Font = Enum.Font.GothamSemibold
                 OptBtn.TextSize = 11
+                OptBtn.ZIndex = 7
                 ApplyCorner(OptBtn, 4)
 
                 local isSelected = false
